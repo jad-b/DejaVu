@@ -1,13 +1,8 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/json"
-	"log"
 	"net/http"
-	"net/http/httputil"
-	"os"
+	"net/url"
 )
 
 type RoundTripperFunc func(*http.Request) (*http.Response, error)
@@ -20,10 +15,10 @@ func (rt RoundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) 
 //
 // When Record is false, DejaVu replays responses by matching against requests.
 type DejaVu struct {
-	Record      bool
-	Tripper     http.RoundTripper
+	Record          bool
+	Tripper         http.RoundTripper
 	StorageLocation *url.URL
-	memory Memory
+	memory          Memory
 }
 
 // NewDejaVu sets up the DejaVu object. It initializes to neither recording nor
@@ -40,10 +35,10 @@ func NewDejaVu(filename string, rt http.RoundTripper) *DejaVu {
 		earl.Scheme = "file"
 	}
 	return &DejaVu{
-		Record: true,
-		StorageLocation:    earl,
-		Tripper:     rt,
-		memory: NewTreeMemory(earl.Path),
+		Record:          true,
+		StorageLocation: earl,
+		Tripper:         rt,
+		memory:          NewTreeMemory(earl.Path),
 	}
 }
 
@@ -59,7 +54,7 @@ func (dv *DejaVu) NewClient() *http.Client {
 // records or replays the response.
 func (dv *DejaVu) WrapClient(c *http.Client) *http.Client {
 	// Wrap the old Tranport inside DejaVu
-	dv.Tripper := client.Transport
+	dv.Tripper = client.Transport
 	// Insert our wrapper into the Client
 	client.Transport = dv
 	return client
@@ -67,7 +62,7 @@ func (dv *DejaVu) WrapClient(c *http.Client) *http.Client {
 
 // RoundTrip executes the underlying RoundTripper, then saves the response.
 func (dv *DejaVu) RoundTrip(r *http.Request) (*http.Response, error) {
-	if !dv.Record {
+	if !dv.Record { // If we're not recording, we're replaying
 		return dv.Storage.Recall(r), nil
 	}
 
@@ -77,7 +72,7 @@ func (dv *DejaVu) RoundTrip(r *http.Request) (*http.Response, error) {
 		return resp, err
 	}
 
-	if dv.Record {
+	if dv.Record { // If we're recording, we store the request-response pair
 		dv.Storage.Remember(r, resp)
 	}
 

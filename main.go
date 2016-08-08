@@ -7,6 +7,7 @@ import (
 	tasks "google.golang.org/api/tasks/v1"
 )
 
+// main exercises authenticating against Google's API using OAuth and performing a simple API call.
 func main() {
 	client := loadClient("./client_secret.json", tasks.TasksReadonlyScope)
 
@@ -18,7 +19,7 @@ func main() {
 
 	r, err := srv.Tasklists.List().MaxResults(10).Do()
 	if err != nil {
-		log.Fatalf("Unable to retrieve task lists.", err)
+		log.Fatalf("Unable to retrieve task lists: %s", err)
 	}
 
 	fmt.Println("Task Lists:")

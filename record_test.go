@@ -3,12 +3,23 @@ package main
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"testing"
+
+	tasks "google.golang.org/api/tasks/v1"
 )
 
-var apiURL = &url.URL{
-	Scheme: "https",
-	Host:   "www.googleapis.com",
+var (
+	apiClient *http.Client
+	apiURL    = &url.URL{
+		Scheme: "https",
+		Host:   "www.googleapis.com",
+	}
+)
+
+func init() {
+	// Setup the Goole OAuth API Client
+	apiClient := loadClient("./client_secret.json", tasks.TasksReadonlyScope)
 }
 
 // Must panics if an error is encountered during Request creation.
@@ -19,11 +30,31 @@ func Must(r *http.Request, err error) *http.Request {
 	return r
 }
 
+func TestRecording(t *testing.T) {
+	dv := NewDejaVu()
+	dv.Record = true
+	client = dv.WrapClient(apiClient)
+	earl := *apiURL
+	earl.Path = tc.Path
+	req := Must(http.NewRequest(http.MethodGet, earl.String(), nil))
+	resp, err := client.Do(dv)
+	if err != nil {
+		t.Error(err)
+		continue
+	}
+	// Now, test replaying this transaction
+	dv.Record = false
+	recResp, err = client.Do(dv)
+	if !reflect.DeepEqual(resp, recResp) {
+		t.Fatalf("Recorded response did not equal returned response\n: %v != %v",
+			recResp, resp)
+	}
+}
+
 func TestResponseRecording(t *testing.T) {
 	dv := NewDejaVu()
 	dv.Record = true
-	client := loadClient() // Complete OAuth login to Google
-	client = dv.WrapClient(client)
+	client = dv.WrapClient(apiClient)
 	testCases := []struct {
 		Method   string
 		Path     string
@@ -37,21 +68,17 @@ func TestResponseRecording(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		// Execute a Request
-		earl := *apiURL     // Copy the base URL
-		earl.Path = tc.Path // Insert the Path
-		resp, err := client.Do(Must(http.NewRequest(tc.Method, earl.String(), nil)))
+		earl := *apiURL
+		earl.Path = tc.Path
+		req := Must(http.NewRequest(tc.Method, earl.String(), nil))
+		resp, err := client.Do(req)
 		if err != nil {
 			t.Error(err)
 			continue
 		}
 		// Verify the Response got saved
-		if _, ok := dv.ResponseMap[earl.Path]; !ok {
-			t.Errorf("Missing path '%s' from the saved responses", earl.Path)
-			continue
-		}
-		if _, ok := dv.ResponseMap[earl.Path][tc.Method]; !ok {
-			t.Errorf("Missing method '%s' from ResponseMap[%s]", tc.Method, earl.Path)
+		if resp = dv.Recall(req); resp == nil {
+			t.Errorf("No saved Response to match the Request")
 			continue
 		}
 	}
