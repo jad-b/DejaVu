@@ -1,0 +1,8 @@
+package: github.com/jad-b/dejavu
+import:
+- package: golang.org/x/oauth2
+  subpackages:
+  - '...'
+- package: google.golang.org/api
+  subpackages:
+  - tasks/v1

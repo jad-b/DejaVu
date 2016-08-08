@@ -1,0 +1,42 @@
+hash: 6ea2ba2c8f5a23cd3ed83c711fa84ed4982d90f27b8c6ec2e52637cd53cd87c2
+updated: 2016-08-08T12:16:11.807440564-04:00
+imports:
+- name: cloud.google.com/go
+  version: f9495dc7d5d062d1b04f594f06347c9a38be96bb
+  subpackages:
+  - compute/metadata
+  - internal
+- name: github.com/golang/protobuf
+  version: c3cefd437628a0b7d31b34fe44b3a7a540e98527
+  subpackages:
+  - proto
+- name: golang.org/x/net
+  version: 075e191f18186a8ff2becaf64478e30f4545cdad
+  subpackages:
+  - context
+  - context/ctxhttp
+- name: golang.org/x/oauth2
+  version: 04e1573abc896e70388bd387a69753c378d46466
+  subpackages:
+  - '...'
+  - google
+  - internal
+  - jws
+  - jwt
+- name: google.golang.org/api
+  version: 3f131f305a2ae45080e71fdb780128cc92e8745e
+  subpackages:
+  - tasks/v1
+- name: google.golang.org/appengine
+  version: b4728023490a62e70ba739ff62aa65ffcca84210
+  subpackages:
+  - urlfetch
+  - internal
+  - internal/urlfetch
+  - internal/app_identity
+  - internal/modules
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+devImports: []
